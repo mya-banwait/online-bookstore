@@ -91,16 +91,64 @@ def customer_interface
 
 
     when 3
-      puts "checkout cart"
+      puts "\nYour cart:\n----------"
+      @cart.map do |book|
+        puts "#{book[3]}, $#{book[6]}"
+      end
+      
+      # make them login / register
+      puts "\n(1) Login\n(2) Register"
+      print "\nEnter number: "
+      login_type = gets.chomp.to_i
+      
+      if login_type == 1
+        print "\nEmail: "
+        email = gets.chomp
+        print "Password: "
+        password = gets.chomp
+        if @db.customer_login(email, password)
+          puts "\nLogged in! ✅"
+          process_checkout(email)
+
+        else
+          puts "--> Email or password not correct"
+        end
+
+      elsif login_type == 2
+        # create customer in database
+        print "\nFull Name: "
+        name = gets.chomp
+        print "Email Address: "
+        email = gets.chomp
+        print "Home Address: "
+        address = gets.chomp
+        print "Account Password: "
+        password = gets.chomp
+
+        if @db.create_customer(name, email, address, password)
+          puts "\nRegistered and logged in! ✅"
+          process_checkout(email)
+
+        else
+          put "--> Error: Unable to register"
+        end
+        
+      else
+        puts "--> Invalid selection"
+      end
+
     when 4
-      puts "track"
+      print "\nEnter your order number: "
+      order_num = gets.chomp.to_i
+      @db.get_order_status(order_num)
+
     when 5
-      puts "Going home"
+      puts "\nReturning to homepage"
     else
       puts "Invalid entry"
     end
 
-    # This brings the customer back to the customer menu unless they specifically asked to go back to the homepage
+    # Bring the customer back to the customer menu unless they specifically asked to go back to the homepage
     choice = 0 unless choice == 5 
   end
 end
@@ -110,7 +158,7 @@ def owner_interface
   # First need to check their credentials
   print "\nEnter username: "
   username = gets.chomp
-  print "\nEnter password: "
+  print "Enter password: "
   password = gets.chomp
 
   # Use database to see if the username/password are valid
@@ -124,9 +172,42 @@ def owner_interface
 
       case choice
       when 1
-        puts "add book"
+        print "\nISBN: "
+        isbn = gets.chomp
+        print "Publisher ID: "
+        pub_id = gets.chomp.to_i
+        print "Owner ID: "
+        own_id = gets.chomp.to_i
+        print "Title: "
+        title = gets.chomp
+        print "Author: "
+        author = gets.chomp
+        print "Genre: "
+        genre = gets.chomp
+        print "Price: "
+        price = gets.chomp.to_f
+        print "Royalty % to Publisher: "
+        royalty = gets.chomp.to_f
+        print "Initial Stock: "
+        stock = gets.chomp.to_i
+
+        if @db.add_book(isbn, pub_id, own_id, title, author, genre, price, royalty, stock)
+          puts "\nBook added to store! ✅"
+        else
+          puts "\n--> Error: Unable to add book to store"
+        end
+
+
       when 2
-        puts "rm book"
+        print "Enter ISBN of book to remove: "
+        isbn = gets.chomp
+
+        if @db.remove_book(isbn)
+          puts "\nBook removed from store! ✅"
+        else
+          puts "\n--> Error: Unable to add book to store"
+        end
+
       when 3
         puts "reports"
       when 4
@@ -136,6 +217,9 @@ def owner_interface
       else
         puts "Invalid entry"
       end
+
+      # Bring the owner back to the owner menu unless they specifically asked to go back to the homepage
+      choice = 0 unless choice == 5
     end
   
   # Return to homepage if the username/password combo does not exist in the database  
@@ -172,6 +256,59 @@ def add_to_cart(book)
     @cart << book
     puts "\nAdded to cart 🛒"
   end
+end
+
+
+      
+      
+      
+def process_checkout(email)
+  # Display total
+  total = get_cart_total
+  puts "\nTotal = #{total}"
+
+  # Get shipping and billing info specific to their order
+  print "\nEnter shipping address: "
+  address = gets.chomp
+
+  print "Enter card number for payment: "
+  card = gets.chomp
+
+  # Create new order in the database
+  order_num = @db.create_order(email, total)
+  if order_num
+    # Display the order number to the customer
+    puts "\nOrder Placed! ✅"
+    puts "Order # for tracking: "
+    puts order_num
+
+    # Decrement the book's stock (this triggers restock if needed) and pay publisher their royalty
+    empty_cart
+
+  else
+
+  end
+
+  
+
+end
+
+# Sums and returns the total cost of the shopping cart
+def get_cart_total
+  total = 0
+  @cart.map { |book| total = total + book[6]}
+  return total
+end
+
+# Calls db to decrease stock of each book sold and empties cart array
+# Pay publisher their royalty for each book
+def empty_cart
+  @cart.map do |book|
+    @db.sell_book(book[0])
+    pub = @db.get_publisher(book[0])
+    pay_publisher(pub[0], amount)
+  end
+  @cart = []
 end
 
 # Create instance variable of the database which is used to call all query methods

@@ -145,7 +145,7 @@ def customer_interface
     when 5
       puts "\nReturning to homepage"
     else
-      puts "Invalid entry"
+      puts "\nInvalid entry"
     end
 
     # Bring the customer back to the customer menu unless they specifically asked to go back to the homepage
@@ -209,13 +209,42 @@ def owner_interface
         end
 
       when 3
-        puts "reports"
+        puts "(1) Sales per genre\n(2) Sales per author\n(3) Sales vs expenditures"
+        print "\nEnter number for report to view: "
+        report_num = gets.chomp.to_i
+        puts "(1) Last month\n(2) Last year"
+        print "\nEnter number for time period to view: "
+        period = gets.chomp.to_i
+
+        if (report_num > 0 && report_num < 4 && period > 0 && period < 3)
+          case report_num
+          when 1
+            @db.sales_per_genre_report(period)
+          when 2
+            @db.sales_per_author_report(period)
+          else
+            @db.sales_vs_exp_report(period)
+          end
+        else
+          puts "\n--> Error: Invalid input"
+        end
+
       when 4
-        puts "create acct"
+        print "Enter username for new account: "
+        new_username = gets.chomp
+        print "Enter password for new account: "
+        new_password = gets.chomp
+
+        if @db.create_owner(new_username, new_password)
+          puts "\nNew owner account created! ✅"
+        else
+          puts "\n--> Error: Unable to create account"
+        end
+
       when 5
-        puts "Going home"
+        puts "\nReturning to homepage"
       else
-        puts "Invalid entry"
+        puts "\nInvalid entry"
       end
 
       # Bring the owner back to the owner menu unless they specifically asked to go back to the homepage
@@ -228,6 +257,7 @@ def owner_interface
   end
 end
 
+# Displays an array of books in a numbered list with their titles
 def display_books(books)
   i = 0
   books.map do |book|
@@ -240,6 +270,7 @@ def display_books(books)
   return book_num
 end
 
+# Displays all information about a book
 def display_book(book)
   puts "Title: #{book[3]}"
   puts "ISBN: #{book[0]}"
@@ -248,6 +279,7 @@ def display_book(book)
   puts "Price: $#{book[6]}"
 end
 
+# Pushes the provided book onto our cart array
 def add_to_cart(book)
   print "\nEnter 1 to add to cart, anything else to exit: "
   input = gets.chomp.to_i
@@ -258,10 +290,7 @@ def add_to_cart(book)
   end
 end
 
-
-      
-      
-      
+# Given the customer's email, process a checkout of the shopping cart
 def process_checkout(email)
   # Display total
   total = get_cart_total
@@ -279,24 +308,21 @@ def process_checkout(email)
   if order_num
     # Display the order number to the customer
     puts "\nOrder Placed! ✅"
-    puts "Order # for tracking: "
+    print "Order # for tracking: "
     puts order_num
 
     # Decrement the book's stock (this triggers restock if needed) and pay publisher their royalty
     empty_cart
 
   else
-
+    puts "\n--> Error: Could not place order. Please try again."
   end
-
-  
-
 end
 
 # Sums and returns the total cost of the shopping cart
 def get_cart_total
   total = 0
-  @cart.map { |book| total = total + book[6]}
+  @cart.map { |book| total = total + book[6].to_f}
   return total
 end
 
@@ -306,7 +332,9 @@ def empty_cart
   @cart.map do |book|
     @db.sell_book(book[0])
     pub = @db.get_publisher(book[0])
-    pay_publisher(pub[0], amount)
+    amount = book[6].to_f * (book[7].to_f / 100)
+    amount = amount.round(2)
+    @db.pay_publisher(pub[0], amount)
   end
   @cart = []
 end

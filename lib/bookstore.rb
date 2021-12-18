@@ -1,6 +1,7 @@
-# This is the executable file that gets called from the command line then takes user input and controls flow
+# This is the executable file that gets called from the command line then takes user input, controls flow, and communicates with the database file
 #!/usr/bin/ruby
 
+# This pulls in database.rb as a dependency
 require_relative 'database'
 
 def enter_bookstore
@@ -29,7 +30,6 @@ end
 
 # Interface 1: For customers of the store
 def customer_interface
-
   choice = 0
   while choice < 1 || choice > 5
     puts "\n(1) Browse list of all books\n(2) Search for books by criteria\n(3) Checkout cart\n(4) Track order status\n(5) Return to homepage"
@@ -77,6 +77,7 @@ def customer_interface
           column = "genre"
         end
 
+        # Search results
         books = @db.search_books(column, search_term)
         puts "\n-- RESULTS --"
         book_num = display_books(books)
@@ -84,23 +85,27 @@ def customer_interface
         if book_num < 1 || book_num > books.length
           puts "--> Invalid book number"
         else
+          # Display info of the one specific book and allow them to add it to the cart
           display_book(books[book_num-1])
           add_to_cart(books[book_num-1])
         end
       end
 
 
+    # Checkout the current cart
     when 3
+      # Display the cart
       puts "\nYour cart:\n----------"
       @cart.map do |book|
         puts "#{book[3]}, $#{book[6]}"
       end
       
-      # make them login / register
+      # Make the customer login or register
       puts "\n(1) Login\n(2) Register"
       print "\nEnter number: "
       login_type = gets.chomp.to_i
       
+      # Login as existing customer
       if login_type == 1
         print "\nEmail: "
         email = gets.chomp
@@ -114,8 +119,8 @@ def customer_interface
           puts "--> Email or password not correct"
         end
 
+      # Create customer in database
       elsif login_type == 2
-        # create customer in database
         print "\nFull Name: "
         name = gets.chomp
         print "Email Address: "
@@ -137,6 +142,7 @@ def customer_interface
         puts "--> Invalid selection"
       end
 
+    # Track order using order number
     when 4
       print "\nEnter your order number: "
       order_num = gets.chomp.to_i
@@ -144,6 +150,7 @@ def customer_interface
 
     when 5
       puts "\nReturning to homepage"
+
     else
       puts "\nInvalid entry"
     end
@@ -153,6 +160,7 @@ def customer_interface
   end
 end
 
+# ------------------------------------------
 # Interface 2: For owners/admin of the store
 def owner_interface
   # First need to check their credentials
@@ -171,6 +179,7 @@ def owner_interface
       choice = gets.chomp.to_i
 
       case choice
+      # Add new book to the database
       when 1
         print "\nISBN: "
         isbn = gets.chomp
@@ -197,7 +206,7 @@ def owner_interface
           puts "\n--> Error: Unable to add book to store"
         end
 
-
+      # Remove existing book from the database
       when 2
         print "Enter ISBN of book to remove: "
         isbn = gets.chomp
@@ -208,6 +217,7 @@ def owner_interface
           puts "\n--> Error: Unable to add book to store"
         end
 
+      # View sales reports
       when 3
         puts "(1) Sales per genre\n(2) Sales per author\n(3) Sales vs expenditures"
         print "\nEnter number for report to view: "
@@ -229,6 +239,7 @@ def owner_interface
           puts "\n--> Error: Invalid input"
         end
 
+      # Create new store owner account
       when 4
         print "Enter username for new account: "
         new_username = gets.chomp
@@ -243,6 +254,7 @@ def owner_interface
 
       when 5
         puts "\nReturning to homepage"
+        
       else
         puts "\nInvalid entry"
       end

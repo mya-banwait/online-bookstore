@@ -10,7 +10,7 @@ class Database
     begin
     def initialize()
       @con = PG.connect :dbname => 'bookstore', :user => 'postgres', 
-          :password => 'rsjm#5123'
+          :password => 'yourpassword'
 
       user = @con.user
       db_name = @con.db

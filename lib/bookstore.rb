@@ -306,7 +306,7 @@ end
 def process_checkout(email)
   # Display total
   total = get_cart_total
-  puts "\nTotal = #{total}"
+  puts "\nTotal = $#{total}"
 
   # Get shipping and billing info specific to their order
   print "\nEnter shipping address: "

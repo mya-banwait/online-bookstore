@@ -15,7 +15,3 @@ end
 task :run do
   ruby 'lib/bookstore.rb'
 end
-
-task :test do
-  ruby 'test/cool_program_test.rb'
-end

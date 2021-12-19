@@ -41,7 +41,7 @@ Application features include:
   
 ## Project Architecture
 
-The project is made fully in Ruby. 
+The project is made in Ruby and uses PG SQL. 
 
 File Structure:
 

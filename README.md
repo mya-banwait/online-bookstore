@@ -15,7 +15,7 @@ Since the project uses PostgreSQL, it currently only works locally by connecting
 
 ## Usage
 
-Clone this repository on your local environment
+Clone this repository on your local environment<br>
 Install dependencies: `gem install bundler && bundle install` <br>
 Run `rake` to run the program.
 
